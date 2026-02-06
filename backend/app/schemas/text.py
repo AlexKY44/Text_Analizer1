@@ -1,7 +1,28 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 
-# Базова відповідь
+# Деталі конкретної помилки
+class Mistake(BaseModel):
+    message: str
+    suggestions: List[str]
+    offset: int
+    length: int
+
+# Нова структура для результату перевірки
+class SpellCheckResult(BaseModel):
+    corrected: str
+    style_improved: str
+    mistakes: List[Mistake]
+
+# Основна відповідь для ендпоінту /check
+class DetailedSpellCheckResponse(BaseModel):
+    original_text: str
+    result: SpellCheckResult
+    action: str = "check"
+    char_count: int
+    word_count: int
+
+# Решта схем без змін
 class TextResponse(BaseModel):
     original_text: str
     processed_text: str
@@ -10,23 +31,16 @@ class TextResponse(BaseModel):
     word_count: int
     error_count: int = 0
 
-# 1. Для перекладу
 class TranslateRequest(BaseModel):
     text: str
-    target_language: str = Field(..., description="Код мови: uk, en, de")
+    target_language: str
 
-# 2. Для розширення та скорочення (ТУТ Є ВІДСОТКИ)
 class ModifyRequest(BaseModel):
     text: str
-    language: str = "uk"
-    percentage: Optional[int] = Field(None, description="Відсоток зміни")
+    percentage: Optional[int] = None
 
-# 3. [NEW] Для рерайту (ТУТ ВІДСОТКІВ НЕМАЄ)
 class RewriteRequest(BaseModel):
     text: str
-    language: str = "uk"
 
-# 4. Для перевірки помилок
 class SpellCheckRequest(BaseModel):
     text: str
-    language: str = "uk"
